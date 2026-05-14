@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Hambatan Rx</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: #f0f2f5;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 32px 16px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    width: 100%;
+    max-width: 640px;
+    padding: 36px 32px 32px;
+  }
+
+  h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.15rem;
+    color: #1a237e;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: 0.82rem;
+    color: #888;
+    margin-bottom: 28px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .formula-box {
+    background: #f5f7ff;
+    border-left: 4px solid #3949ab;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.88rem;
+    color: #3949ab;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #aaa;
+    margin-bottom: 14px;
+    margin-top: 20px;
+  }
+
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .input-group { display: flex; flex-direction: column; gap: 5px; }
+
+  label {
+    font-size: 0.80rem;
+    font-weight: 500;
+    color: #444;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  input[type="number"] {
+    border: 1.5px solid #dde1f0;
+    border-radius: 7px;
+    padding: 9px 12px;
+    font-size: 0.92rem;
+    font-family: 'IBM Plex Mono', monospace;
+    color: #222;
+    background: #fafbff;
+    transition: border-color 0.2s;
+    outline: none;
+    width: 100%;
+  }
+  input[type="number"]:focus { border-color: #3949ab; background: #fff; }
+  .unit { font-size: 0.72rem; color: #aaa; margin-left: 2px; }
+
+  button {
+    width: 100%;
+    margin-top: 24px;
+    padding: 12px;
+    background: #3949ab;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background 0.18s, transform 0.1s;
+  }
+  button:hover { background: #283593; }
+  button:active { transform: scale(0.98); }
+
+  /* RESULT */
+  .result-box {
+    display: none;
+    margin-top: 24px;
+    background: #e8eaf6;
+    border-radius: 10px;
+    padding: 20px 20px 16px;
+  }
+
+  .result-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #5c6bc0;
+    margin-bottom: 14px;
+  }
+
+  .step {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.81rem;
+    color: #263238;
+    margin-bottom: 7px;
+    padding: 9px 12px;
+    background: #fff;
+    border-radius: 5px;
+    border-left: 3px solid #7986cb;
+    line-height: 2.2;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .step.highlight {
+    border-left-color: #3949ab;
+    background: #f0f3ff;
+  }
+
+  /* FRACTION */
+  .frac {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: middle;
+    margin: 0 3px;
+    font-size: 0.81rem;
+  }
+  .frac .num {
+    border-bottom: 1.5px solid #263238;
+    padding: 0 3px 1px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .frac .den {
+    padding: 1px 3px 0;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  /* SQRT */
+  .sq {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .sq-sign { font-size: 1.25em; line-height: 1; margin-right: 1px; }
+  .sq-inner {
+    border-top: 1.5px solid #263238;
+    padding: 0 3px;
+    white-space: nowrap;
+  }
+
+  .final-result {
+    margin-top: 14px;
+    background: #3949ab;
+    color: #fff;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.05rem;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Kalkulator Hambatan Rx</h1>
+  <div class="subtitle">Metode Propagasi Ketidakpastian</div>
+
+  <div class="formula-box">
+    R̄x =
+    <span class="frac">
+      <span class="num">L̄₁</span>
+      <span class="den">L̄₂</span>
+    </span>
+    × R̄₁
+  </div>
+
+  <div class="section-title">Input Diketahui</div>
+
+  <div class="input-row">
+    <div class="input-group">
+      <label>L̄₁ <span class="unit">(m)</span></label>
+      <input type="number" id="L1" value="0.505" step="any">
+    </div>
+    <div class="input-group">
+      <label>ΔL₁ <span class="unit">(m)</span></label>
+      <input type="number" id="dL1" value="0.000625" step="any">
+    </div>
+  </div>
+  <div class="input-row">
+    <div class="input-group">
+      <label>L̄₂ <span class="unit">(m)</span></label>
+      <input type="number" id="L2" value="0.495" step="any">
+    </div>
+    <div class="input-group">
+      <label>ΔL₂ <span class="unit">(m)</span></label>
+      <input type="number" id="dL2" value="0.000625" step="any">
+    </div>
+  </div>
+  <div class="input-row">
+    <div class="input-group">
+      <label>R̄₁ <span class="unit">(Ω)</span></label>
+      <input type="number" id="R1" value="10000" step="any">
+    </div>
+    <div class="input-group">
+      <label>ΔR₁ <span class="unit">(Ω)</span></label>
+      <input type="number" id="dR1" value="0.5" step="any">
+    </div>
+  </div>
+
+  <button onclick="hitung()">Hitung</button>
+
+  <div class="result-box" id="result">
+    <div class="result-title">Langkah Penyelesaian</div>
+    <div id="steps"></div>
+    <div class="final-result" id="final"></div>
+  </div>
+</div>
+
+<script>
+function frac(num, den) {
+  return `<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span>`;
+}
+function sq(inner) {
+  return `<span class="sq"><span class="sq-sign">√</span><span class="sq-inner">${inner}</span></span>`;
+}
+function rd(v, d) { return parseFloat(v.toFixed(d)); }
+function g(v) {
+  // strip trailing zeros after decimal
+  let s = v.toString();
+  if (s.includes('.')) s = s.replace(/\.?0+$/, '');
+  return s;
+}
+
+function hitung() {
+  const L1  = parseFloat(document.getElementById('L1').value);
+  const dL1 = parseFloat(document.getElementById('dL1').value);
+  const L2  = parseFloat(document.getElementById('L2').value);
+  const dL2 = parseFloat(document.getElementById('dL2').value);
+  const R1  = parseFloat(document.getElementById('R1').value);
+  const dR1 = parseFloat(document.getElementById('dR1').value);
+
+  const R1fmt = R1.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+  // ============================================================
+  // BAGIAN 1: Hitung rasio L
+  // ============================================================
+  const Lr_exact = L1 / L2;
+  const Lr = rd(Lr_exact, 4);             // dibulatkan: 1.0202
+
+  const t1      = dL1 / L2;              // ΔL1/L2
+  const t2_num  = dL2 * L1;              // ΔL2·L1  (pembilang)
+  const t2_den  = L2 * L2;               // L2²     (penyebut)
+  const t2      = t2_num / t2_den;       // ΔL2·L1/L2²
+  const t1sq    = t1 * t1;
+  const t2sq    = t2 * t2;
+  const sumT    = t1sq + t2sq;
+
+  const dLr_exact = Math.sqrt(sumT);
+  const dLr = rd(dLr_exact, 4);          // dibulatkan: 0.0018
+
+  // ============================================================
+  // BAGIAN 2: Hitung Rx dan ΔRx (pakai nilai SUDAH dibulatkan)
+  // ============================================================
+  const Rx   = rd(Lr * R1, 3);           // 10202.000
+  const RxK  = rd(Rx / 1000, 3);         // 10.202 kΩ
+
+  const tA   = dLr * R1;                 // 0.0018 × 10000 = 18
+  const tB   = dR1 * Lr;                 // 0.5 × 1.0202 = 0.5101
+  const tAsq = rd(tA * tA, 8);           // 324
+  const tBsq = rd(tB * tB, 8);           // 0.26020201
+  const sumR = rd(tAsq + tBsq, 8);       // 324.26020201
+  const dRx  = rd(Math.sqrt(sumR), 4);   // 18.0072
+
+  // ============================================================
+  // BANGUN LANGKAH-LANGKAH
+  // ============================================================
+  const rows = [];
+
+  // --- BLOK A: Rumus dasar Rx ---
+  rows.push({ html:
+    `(R̄x ± ΔRx) = ` + frac(`L̄₁ ± ΔL₁`, `L̄₂ ± ΔL₂`) + ` × (R̄₁ ± ΔR₁)`
+  });
+
+  // Substitusi nilai
+  rows.push({ html:
+    `(R̄x ± ΔRx) = ` +
+    frac(`(${g(L1)} ± ${g(dL1)}) m`, `(${g(L2)} ± ${g(dL2)}) m`) +
+    ` × (${R1fmt} ± ${g(dR1)}) Ω`
+  });
+
+  // --- BLOK B: Rumus propagasi untuk rasio ---
+  rows.push({ html:
+    frac(`L̄₁ ± ΔL₁`, `L̄₂ ± ΔL₂`) + ` = ` +
+    frac(`L̄₁`, `L̄₂`) + ` ± ` +
+    sq(
+      `(` + frac(`ΔL₁`, `L̄₂`) + `)² + (` +
+      frac(`ΔL₂ · L̄₁`, `L̄₂²`) + `)²`
+    )
+  });
+
+  // Substitusi ke rumus rasio
+  rows.push({ html:
+    frac(`L̄₁ ± ΔL₁`, `L̄₂ ± ΔL₂`) + ` = ` +
+    frac(`${g(L1)}`, `${g(L2)}`) + ` ± ` +
+    sq(
+      `(` + frac(`${g(dL1)}`, `${g(L2)}`) + `)² + (` +
+      frac(`${g(dL2)} × ${g(L1)}`, `${g(L2)}²`) + `)²`
+    )
+  });
+
+  // Hitung nilai dalam sqrt
+  rows.push({ html:
+    frac(`L̄₁ ± ΔL₁`, `L̄₂ ± ΔL₂`) + ` = (${Lr.toFixed(4)}) ± ` +
+    sq(
+      `(${g(t1.toFixed(7).replace(/0+$/, ''))})² + (` +
+      frac(`${g(t2_num)}`, `${g(t2_den)}`) + `)²`
+    )
+  });
+
+  // t2 sebagai desimal
+  rows.push({ html:
+    frac(`L̄₁ ± ΔL₁`, `L̄₂ ± ΔL₂`) + ` = (${Lr.toFixed(4)}) ± ` +
+    sq(`(${g(rd(t1,10))})² + (${g(rd(t2,10))})²`)
+  });
+
+  // Kuadrat
+  rows.push({ html:
+    frac(`L̄₁ ± ΔL₁`, `L̄₂ ± ΔL₂`) + ` = (${Lr.toFixed(4)}) ± ` +
+    sq(`${g(rd(t1sq,13))} + ${g(rd(t2sq,13))}`)
+  });
+
+  // Jumlah di bawah akar
+  rows.push({ html:
+    frac(`L̄₁ ± ΔL₁`, `L̄₂ ± ΔL₂`) + ` = (${Lr.toFixed(4)}) ± ` +
+    sq(`${g(rd(sumT,13))}`)
+  });
+
+  // Hasil rasio = L bar
+  rows.push({ html:
+    frac(`L̄₁ ± ΔL₁`, `L̄₂ ± ΔL₂`) +
+    ` = (${Lr.toFixed(4)} ± ${dLr.toFixed(4)}) = (L̄ ± ΔL)`,
+    highlight: true
+  });
+
+  // --- BLOK C: Substitusi balik ke Rx ---
+  rows.push({ html:
+    `(R̄x ± ΔRx) = ` + frac(`L̄₁ ± ΔL₁`, `L̄₂ ± ΔL₂`) + ` × (R̄₁ ± ΔR₁)`
+  });
+
+  rows.push({ html:
+    `(R̄x ± ΔRx) = (L̄ ± ΔL) × (R̄₁ ± ΔR₁)`
+  });
+
+  rows.push({ html:
+    `(R̄x ± ΔRx) = (${Lr.toFixed(4)} ± ${dLr.toFixed(4)}) × (${R1fmt} ± ${g(dR1)}) Ω`
+  });
+
+  // --- BLOK D: Propagasi perkalian ---
+  rows.push({ html:
+    `(R̄x ± ΔRx) = (L̄ × R̄₁) Ω ± ` +
+    sq(`(ΔL)²·(R̄₁)² + (ΔR₁)²·(L̄)²`) + ` Ω`
+  });
+
+  // Substitusi angka
+  rows.push({ html:
+    `(R̄x ± ΔRx) = (${Lr.toFixed(4)} × ${R1fmt}) = ${RxK.toFixed(3)} kΩ ± ` +
+    sq(`(${dLr.toFixed(4)})²·(${R1fmt})² + (${g(dR1)})²·(${Lr.toFixed(4)})²`) + ` Ω`
+  });
+
+  // Hitung nilai
+  rows.push({ html:
+    `(R̄x ± ΔRx) = (${RxK.toFixed(3)}) kΩ ± ` +
+    sq(`(${g(rd(dLr*dLr,8))})·(${g(rd(R1*R1,0))}) + (${g(dR1*dR1)})·(${g(rd(Lr*Lr,8))})`) + ` Ω`
+  });
+
+  // Hasil perkalian
+  rows.push({ html:
+    `(R̄x ± ΔRx) = (${RxK.toFixed(3)}) kΩ ± ` +
+    sq(`${tAsq} + ${tBsq}`) + ` Ω`
+  });
+
+  // Jumlah
+  rows.push({ html:
+    `(R̄x ± ΔRx) = (${RxK.toFixed(3)}) kΩ ± ` +
+    sq(`${sumR}`) + ` Ω`
+  });
+
+  document.getElementById('steps').innerHTML = rows.map(r =>
+    `<div class="step${r.highlight ? ' highlight' : ''}">${r.html}</div>`
+  ).join('');
+
+  document.getElementById('final').textContent =
+    `(R̄x ± ΔRx) = (${RxK.toFixed(3)} ± ${dRx.toFixed(4)}) Ω`;
+
+  document.getElementById('result').style.display = 'block';
+}
+</script>
+</body>
+</html>
